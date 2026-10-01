@@ -1,7 +1,12 @@
 # The Instagram agent skill
 
-Thirteen Claude skills that run an Instagram account. Free, MIT, no signup, no
-API key, nothing to connect.
+Thirteen Instagram skills for **Codex and Claude**. Free, MIT, with local
+Python helpers that need no Instagram API key or connection.
+
+[Leia em português](README.pt-BR.md).
+
+Codex adaptation maintained by [Kleber Tanide](https://github.com/klebertanide),
+based on [Jake Schincariol's original skill pack](https://github.com/Jakeschincariol/instagram-agent-skill).
 
 One of them writes your Reels off 26 hook formulas and scores the hook before
 you waste a take on it. One goes and finds the reels that are actually working
@@ -15,62 +20,138 @@ the em dashes, the slop vocabulary and the invisible watermark characters out
 of a draft, then scores what is left against a five-check panel before you ever
 see it.
 
-**Nothing gets posted until you say yes.** These skills write. You post.
+**These skills prepare local drafts and files. You post them.**
 
-## Install
+## Install in Codex
 
-Paste this into Claude:
-
-```
-https://github.com/Jakeschincariol/instagram-agent-skill
-
-Install this skill, then confirm /ig-reel works.
-```
-
-Or do it yourself, in Claude Code:
+Requires **Python 3.10+** and a Codex client that supports skills. Clone this
+fork and run the installer:
 
 ```bash
-git clone https://github.com/Jakeschincariol/instagram-agent-skill.git
-cp -r instagram-agent-skill/skills/ig-* ~/.claude/skills/
+git clone https://github.com/klebertanide/instagram-agent-skill.git
+cd instagram-agent-skill
+python3 scripts/install.py
 ```
 
-Or as a plugin:
+This installs all thirteen sibling folders into `~/.agents/skills/`, adds their
+Codex display metadata, and creates `~/.agents/instagram/voice.md` only if it is
+missing. Open a new Codex session after installation. In Codex CLI or the IDE,
+use the skills selector (`/skills` where available), type `$ig-reel`, or ask for
+a Reel in natural language:
 
+```text
+$ig-reel Turn our proposal process, reduced from 5 hours to 20 minutes, into a Reel.
 ```
-/plugin marketplace add Jakeschincariol/instagram-agent-skill
-/plugin install instagram-agent
+
+The `$ig-*` syntax belongs in a **Codex prompt**, not a shell command. Claude's
+`/ig-reel` syntax does not invoke a Codex skill.
+
+Project-only installation:
+
+```bash
+python3 scripts/install.py --project /path/to/your/project
 ```
 
-Project-local instead of global: copy the same folders into your repo's
-`.claude/skills/`. No Claude Code at all? Paste any single `SKILL.md` at the top
-of a chat and it runs as a mode. You lose the five Python tools, which is most
-of the point of `/ig-reel` and `/ig-human`, but the rest works.
+Skills go into the project's `.agents/skills/` and the profile into
+`.instagram/voice.md`. Add `.instagram/` to that project's `.gitignore` if it
+contains private profile information. Custom locations, previews and updates:
 
-Then spend ten minutes on `templates/voice.md`. Copy it to
-`~/.claude/instagram/voice.md` and fill it in, or send Claude three of your own
-reels and say "write my voice.md from these". Every skill reads that file. It
-matters more here than on other platforms, because you have to say the words
-out loud.
+```bash
+python3 scripts/install.py --dry-run
+python3 scripts/install.py --data-dir /path/to/instagram-profile
+python3 scripts/install.py --force
+python3 scripts/install.py --migrate-claude
+```
+
+Existing skill folders are refused unless `--force` is supplied. Profile files
+are **never overwritten**, including with `--force`. `--migrate-claude` copies
+existing Markdown data from `~/.claude/instagram/`, skipping destination files
+that already exist. It leaves the source untouched. The installer records the
+chosen data directory in each installed skill's `instagram-config.json`.
+Install the whole pack together: `ig-viral` depends on its sibling `ig-reel`.
+
+The installer uses `--data-dir`, then `INSTAGRAM_AGENT_HOME`, then the default
+project/global data location. During `--force` updates without either override,
+it preserves the data directory recorded in the existing installation. Conflicting
+or invalid installed configurations require an explicit `--data-dir` before
+anything changes. At runtime, an environment override or project `.instagram/`
+still takes precedence over the installed setting.
+
+## Install as a Codex plugin
+
+The portable root `plugin.json` and `.agents/plugins/marketplace.json` package
+all thirteen skills. With a current Codex CLI, from this **adapted local
+checkout**:
+
+```bash
+codex plugin marketplace add .
+codex plugin add instagram-agent@instagram-agent-skill
+```
+
+Installed plugin skills are namespaced. Invoke `$instagram-agent:ig-reel` in a
+Codex prompt, or select the skill in the client. Direct skill installation uses
+the shorter `$ig-reel` name.
+
+You can also install from that local marketplace in the plugin directory of a
+supported desktop client. Use either standalone skills or the plugin to avoid
+duplicate entries. The plugin installation does not run the Python installer:
+fill in a copy of `templates/voice.md` at `~/.agents/instagram/voice.md`, or ask
+Codex to create it from examples. A GitHub marketplace installation will use
+whatever version is published there; local changes must be published before
+that remote installation includes this adaptation.
+
+## Claude and other clients
+
+Claude remains supported:
+
+```bash
+python3 scripts/install.py --agent claude
+# Or: python3 scripts/install.py --agent claude --project /path/to/project
+```
+
+Global Claude installation uses `~/.claude/skills/` and
+`~/.claude/instagram/voice.md`. The original `.claude-plugin` marketplace also
+remains available. Use `/ig-reel` in Claude. Pasting a single `SKILL.md` into a
+chat works only as instructions; executing its Python helpers still requires
+filesystem and shell access.
+
+## Your voice and data
+
+Spend ten minutes on `templates/voice.md`, or provide examples and ask your
+agent to create the profile. Skills keep your language and reuse details you
+already supplied; missing claims remain explicit placeholders.
+
+Each skill resolves its data directory in this order: explicit
+`INSTAGRAM_AGENT_HOME`, the nearest existing project `.instagram/`, its installed
+`instagram-config.json`, then `~/.agents/instagram/` in Codex or
+`~/.claude/instagram/` in Claude. Missing Codex data may be read from the legacy
+Claude directory without changing it. `voice.md`, `swipe.md`, `plan.md` and
+`log.md` live in the selected data directory. Logs distinguish drafts/approved
+content from confirmed posts.
+
+The examples below run from the repository root. When installed, agents resolve
+helpers from the actual loaded skill directory, so they work from another
+project or a path containing spaces.
 
 ## The thirteen
 
-| command | what it does |
+| skill (Codex: `$name`; Claude: `/name`) | what it does |
 | --- | --- |
-| `/ig-reel` | One idea into a Reel. Three hooks from [26 formulas](skills/ig-reel/hooks.json), scored, then the script, the on-screen text and a timed beat sheet. |
-| `/ig-viral` | Goes and finds what is working in your niche, ranks it by multiple over each account's own median, names the formula, writes the swipe file. |
-| `/ig-caption` | The caption, linted. Shows you the 125 characters the feed actually shows before the tap. |
-| `/ig-carousel` | Swipe posts. The cover that earns the swipe, slide copy, and the 1080x1350 files. |
-| `/ig-story` | The daily story sequence, which sticker does which job, and the DM funnel that starts with them moving first. |
-| `/ig-profile` | Scores your profile against a [12-part rubric](skills/ig-profile/rubric.json) out of 100, then rewrites in fix-first order. |
-| `/ig-plan` | The week. What to post, which format, when, and the 10 accounts to engage with. |
-| `/ig-human` | The humanizer. Two scripts that actually run. See below. |
-| `/ig-comment` | Comments on other people's posts. Nine types, picked by what the post actually is. Never "🔥🔥🔥". |
-| `/ig-reply` | The thread under your own post. Sorts into keyword / lead / substance / question / support / noise, then writes in that order. |
-| `/ig-dm` | The keyword delivery, the first message, the collab pitch, and the two follow-ups. Two. |
-| `/ig-repurpose` | One video, podcast or newsletter into a week of reels and carousels that each stand alone. |
-| `/ig-audit` | Post-mortem on what you already posted. Ranks by outlier multiple and sends per reach, not views. |
+| `$ig-reel` | One idea into a Reel. Three hooks from [26 formulas](skills/ig-reel/hooks.json), scored, then the script, the on-screen text and a timed beat sheet. |
+| `$ig-viral` | Goes and finds what is working in your niche, ranks it by multiple over each account's own median, names the formula, writes the swipe file. |
+| `$ig-caption` | The caption, linted. Shows you the 125 characters the feed actually shows before the tap. |
+| `$ig-carousel` | Swipe posts. The cover that earns the swipe, slide copy, and the 1080x1350 files. |
+| `$ig-story` | The daily story sequence, which sticker does which job, and the DM funnel that starts with them moving first. |
+| `$ig-profile` | Scores your profile against a [12-part rubric](skills/ig-profile/rubric.json) out of 100, then rewrites in fix-first order. |
+| `$ig-plan` | The week. What to post, which format, when, and the 10 accounts to engage with. |
+| `$ig-human` | The humanizer. Two scripts that actually run. See below. |
+| `$ig-comment` | Comments on other people's posts. Nine types, picked by what the post actually is. Never "🔥🔥🔥". |
+| `$ig-reply` | The thread under your own post. Sorts into keyword / lead / substance / question / support / noise, then writes in that order. |
+| `$ig-dm` | The keyword delivery, the first message, the collab pitch, and the two follow-ups. Two. |
+| `$ig-repurpose` | One video, podcast or newsletter into a week of reels and carousels that each stand alone. |
+| `$ig-audit` | Post-mortem on what you already posted. Ranks by outlier multiple and sends per reach, not views. |
 
-## The five tools that actually run
+## The six Python helpers that actually run
 
 No dependencies, no network, nothing uploaded. They run on your machine, on
 your text.
@@ -78,8 +159,8 @@ your text.
 ### Hooks
 
 ```bash
-python3 hookscore.py hooks.txt              # rank your options
-python3 beats.py script.txt --target 30     # time it before you shoot it
+python3 skills/ig-reel/hookscore.py hooks.txt              # rank your options
+python3 skills/ig-reel/beats.py script.txt --target 30     # time it before you shoot it
 ```
 
 ```
@@ -124,7 +205,7 @@ BEAT SHEET  ·  73 words  ·  ~26.6s at 165 wpm  ·  target 30.0s
 ### The caption
 
 ```bash
-python3 caption.py caption.txt --keywords "client contracts,freelance pricing"
+python3 skills/ig-caption/caption.py caption.txt --keywords "client contracts,freelance pricing"
 ```
 
 Instagram gives a caption about 125 characters in the feed and hides the rest
@@ -153,17 +234,19 @@ Instagram cut it on 18 December 2025.
 ### The humanizer
 
 ```bash
-python3 humanize.py draft.txt --report      # clean it, show every change
-python3 detect.py draft.txt                  # score it, five checks
-python3 detect.py before.txt after.txt       # prove the delta
+python3 skills/ig-human/humanize.py draft.txt --report      # clean it, show every change
+python3 skills/ig-human/detect.py draft.txt                  # score it, five checks
+python3 skills/ig-human/detect.py before.txt after.txt       # prove the delta
 ```
 
 **What comes out automatically:**
 
-- **Invisible characters.** Zero-width spaces and joiners, word joiners, soft
+- **Invisible characters.** Zero-width spaces, word joiners, soft
   hyphens, byte-order marks, Unicode tag characters, invisible separators,
   non-breaking and narrow spaces. Your keyboard does not make these. They
-  survive copy-paste and they are invisible in every editor you own.
+  survive copy-paste and they are invisible in every editor you own. Zero-width
+  joiners and non-joiners are preserved by default because emoji and some
+  writing systems need them; `--strip-joiners` enables deliberate removal.
 - **Typography.** Em dash to comma, en dash to hyphen, curly quotes to
   straight, ellipsis to three dots, and the orphaned punctuation that leaves.
 - **The lexicon.** 154 stock words and phrases with plain-English replacements.
@@ -199,7 +282,7 @@ After `humanize.py`, with the flagged structures still unrewritten:
 ### The swipe file
 
 ```bash
-python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md
+python3 skills/ig-viral/swipe.py captured.tsv --out ~/.agents/instagram/swipe.md
 ```
 
 Raw views are not evidence. A 2,000,000-follower account doing 400,000 views
@@ -265,7 +348,7 @@ Spoken hooks say their numbers out loud.
 If you re-run this on a bigger or cleaner corpus and get a different answer, I
 would rather know. The measurement script is not in the repo because it depends
 on `yt-dlp`, but the method is four lines and is written out in
-[`/ig-viral`](skills/ig-viral/SKILL.md).
+[`$ig-viral`](skills/ig-viral/SKILL.md).
 
 ## The fine print, which is the honest part
 
@@ -276,14 +359,14 @@ you. Everything else people use to automate posting, commenting, following or
 DMing is browser automation or a third-party tool, and both violate
 [Instagram's Terms of Use](https://help.instagram.com/581066165581870) and get
 accounts action-blocked. So every skill here ends the same way: a copy-ready
-block, and you post it. That is not a limitation bolted on afterwards, it is
-the design, and it is why the approval gate is real rather than a setting.
+block, and you post it. Requested local drafts and rendered files are prepared
+for your review without an extra approval step.
 
 The one exception is keyword auto-replies in DMs, which Instagram supports
 through its own tools and approved partners, and which only fire after somebody
-comments first. `/ig-dm` says where that line is.
+comments first. `$ig-dm` says where that line is.
 
-**`/ig-viral` reads, it does not scrape.** Ten accounts, a dozen reels each, at
+**`$ig-viral` reads, it does not scrape.** Ten accounts, a dozen reels each, at
 human speed, with you driving your own browser. It never asks for your password
 and never logs in as you. Automated collection at volume is the thing that gets
 accounts restricted, and a crawler is not what this is.
@@ -291,10 +374,9 @@ accounts restricted, and a crawler is not what this is.
 **The five detection checks are local heuristics, not detector APIs.** They are
 modelled on the signals public detectors key on and they run entirely on your
 machine. They are not GPTZero, Originality, Copyleaks, Winston or Turnitin,
-they do not call those services, and they cannot promise those verdicts. Fixing
-what they measure tends to move those numbers, because they are measuring the
-same underlying things. That is the whole claim. Nobody can honestly sell you
-"undetectable", and anybody who does is selling you something.
+they do not call those services, and they cannot predict their verdicts or prove
+human authorship. Use the scores as local editing signals. They are not
+calibrated against commercial detectors or languages other than English.
 
 **The invisible-character pass is real and it is narrow.** It removes the
 zero-width and format characters that end up in generated text and survive a
@@ -309,6 +391,42 @@ your name. If a draft needs a number you have not given, it comes back with
 2025 while this repo was being written, and the linter had the old number in it
 until the fact got checked. If something here contradicts what Instagram is
 doing when you read it, Instagram is right.
+
+## Language and capability limits
+
+Write in the user's language. Hook formulas, vocabulary substitutions and most
+text scores were designed for English. For Portuguese and other languages,
+length/timing/format checks still help, but language scores need manual review.
+Do not translate or invent proof to improve a score. Texts under 25 words also
+need manual review: the detector cannot produce a reliable PASS for them.
+
+Research uses only tools the session actually has or data the user supplies.
+When browser access or transcripts are unavailable, ask for pasted data instead
+of claiming to have read a page. YouTube examples optionally need `yt-dlp`, which
+is not a dependency of the six bundled helpers. Carousel PNG/JPEG export needs
+an available renderer; HTML and copy are the fallback, not an uploadable PDF.
+
+Score-based exits of `1` indicate review/fix feedback, not a broken command.
+Invalid arguments or unreadable inputs exit with `2`. JSON output is intended
+for integrations; inspect its verdict rather than assuming exit `0` means the
+draft passed.
+
+## Validation
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/check_codex.py
+python3 scripts/check_codex.py --install-plugin
+```
+
+The first command checks installation, packaged metadata and helper behavior
+using temporary files. The second requires Codex CLI and verifies the thirteen
+skills and plugin through its native app-server in a temporary installation,
+without calling a model or logging into Instagram. CI runs the Python tests on
+Linux, macOS and Windows with Python 3.10 and 3.12.
+
+Native path/invocation reference: [Codex skills](https://developers.openai.com/codex/skills/).
+Plugin packaging reference: [OpenAI plugin packages](https://developers.openai.com/plugins/build/plugins).
 
 ## Files
 

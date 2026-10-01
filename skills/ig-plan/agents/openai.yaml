@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Plan"
+  short_description: "Plan Instagram content, stories and engagement for the week"
+  default_prompt: "Use $ig-plan to plan my Instagram content for this week."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Reel"
+  short_description: "Draft hooks, scripts and timed beat sheets for Instagram reels"
+  default_prompt: "Use $ig-reel to turn my idea into an Instagram Reel."

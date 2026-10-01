@@ -11,14 +11,41 @@ description: >-
 
 # ig-human
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 Two tools live in this folder and they both actually run. Use them. Do not
 eyeball this.
 
 ```bash
-python3 humanize.py draft.txt --report        # clean it, show what changed
-python3 detect.py draft.txt                    # score it, five checks
-python3 detect.py before.txt after.txt         # prove the delta
+python3 "$SKILL_DIR/humanize.py" "/absolute/path/draft.txt" --report        # clean it, show what changed
+python3 "$SKILL_DIR/detect.py" "/absolute/path/draft.txt"                    # score it, five checks
+python3 "$SKILL_DIR/detect.py" "/absolute/path/before.txt" "/absolute/path/after.txt"         # prove the delta
 ```
+
+For non-English text, first review whether the automatic substitutions apply:
+English words, contractions and structures do not establish human authorship.
+Preserve meaningful Unicode joiners and punctuation used by the user's language;
+do not accept automatic deletions that change words or meaning. Compare the
+original and cleaned output and restore such characters when necessary.
 
 Both read `slop.json`: 154 stock words and phrases with plain-English
 replacements, 18 invisible character classes, 11 typographic substitutions and
@@ -40,10 +67,11 @@ their own script.
 
 **1. Invisible characters.** Zero-width spaces and joiners, word joiners, soft
 hyphens, byte-order marks, Unicode tag characters, invisible separators,
-non-breaking and narrow spaces. A keyboard does not produce these. They survive
-copy-paste, they are invisible in every editor, and they are the most
-mechanical thing in generated text. `humanize.py` deletes every one, including
-any remaining Unicode format character it does not have a name for.
+non-breaking and narrow spaces. Review what these characters mean before
+removing them. `humanize.py` preserves zero-width joiners/non-joiners by default
+because emoji and some writing systems need them; `--strip-joiners` is an
+explicit opt-in only when their removal is appropriate. Other invisible format
+characters are cleaned, so compare the output with the original.
 
 **2. Typography.** Em dash to comma, en dash to hyphen, curly quotes to
 straight, ellipsis to three dots, bullet character to hyphen. The em dash pass
@@ -70,9 +98,9 @@ a sentence needs judgement:
 - Hashtag walls
 - Reflex bait: "follow for more", "tag someone who", "double tap if"
 
-That list is your job. Rewrite each flagged line by hand, keeping the meaning,
-then re-run `detect.py`. This is the part that moves the score from REVIEW to
-PASS, and it is the part a script cannot do.
+That list is your job. Review each flagged line by hand, keeping the meaning
+and the user's voice, then re-run `detect.py` when it is useful. A flag can be
+intentional; do not rewrite natural language solely to earn PASS.
 
 ## The five checks
 
@@ -86,26 +114,30 @@ PASS, and it is the part a script cannot do.
 | FINGERPRINT | invisible chars, em dashes, curly quotes per 1k chars | typographically perfect |
 | VOICE | contractions, person, structural tells | no contractions, staged reveals |
 
-The verdict weights the mean at 60% and the **weakest single check** at 40%,
-because one signal is enough. PASS needs an overall of 70+ with no check
-below 55.
+The verdict weights the mean at 60% and the **weakest single check** at 40%.
+PASS needs an overall of 70+ with no check below 55. These are the script's
+thresholds, not evidence of whether a person or model wrote the text.
 
 ## Say this honestly
 
 These are five local heuristics modelled on the signals public detectors key
 on. They run entirely on the user's machine and nothing is uploaded. They are
 **not** GPTZero, Originality, Copyleaks, Winston or Turnitin, they do not call
-those APIs, and they cannot promise those verdicts. Fixing what they measure
-does tend to move those numbers, because they are measuring the same underlying
-things. That is the claim. Do not make a bigger one on the user's behalf, and
-do not tell a user their text is undetectable.
+those APIs, and they cannot predict those verdicts or prove human authorship.
+The lexicon and voice checks focus on English and are not calibrated against
+other languages or commercial detectors. Describe scores as editing signals;
+never claim the text is undetectable or that a score guarantees performance.
 
 ## Order of operations
 
-1. `humanize.py draft.txt -o clean.txt --report`
-2. Read the structural flags. Rewrite those lines yourself.
-3. `detect.py draft.txt clean.txt` to show the before and after.
-4. If the verdict is not PASS, fix the weakest check named in the output and go
-   again. Two rounds is normal. Five means the draft was written by formula,
-   and the fix is a different draft, not more passes.
+1. `python3 "$SKILL_DIR/humanize.py" "/absolute/path/draft.txt" -o
+   "/absolute/path/clean.txt" --report` (on one line).
+2. Read the structural flags. Revise only when the change improves the writing.
+3. `python3 "$SKILL_DIR/detect.py" "/absolute/path/draft.txt"
+   "/absolute/path/clean.txt"` (on one line) to show the before and after.
+4. If the verdict is not PASS, inspect the weakest check and revise only when
+   it improves the draft. Stop when the writing is natural; explain heuristic
+   limits for non-English text instead of chasing an English PASS. For drafts
+   under 25 words, VOICE is fixed at 50, so PASS is impossible; use manual
+   review. Limit revisions to two useful rounds instead of looping for a score.
 5. Show the user the cleaned text and the score. Never the score alone.

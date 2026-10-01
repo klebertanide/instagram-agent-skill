@@ -21,11 +21,13 @@ If you only have `followers`, leave median out and the script says so.
 
 Usage
   python3 swipe.py captured.tsv
-  python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md
+  python3 swipe.py captured.tsv --out ~/.agents/instagram/swipe.md
   python3 swipe.py captured.tsv --json
 """
 
 import argparse
+from decimal import Decimal
+import importlib.util
 import json
 import os
 import re
@@ -37,16 +39,20 @@ HOOKS = os.path.join(HERE, "..", "ig-reel", "hooks.json")
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
 
 try:                                              # optional: score the hooks too
-    sys.path.insert(0, os.path.join(HERE, "..", "ig-reel"))
-    from hookscore import run as score_hook       # noqa: E402
-except Exception:                                 # ig-viral copied on its own
+    scorer_path = os.path.join(HERE, "..", "ig-reel", "hookscore.py")
+    spec = importlib.util.spec_from_file_location("instagram_hookscore", scorer_path)
+    scorer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(scorer)
+    score_hook = scorer.run
+except (ImportError, OSError):                     # ig-viral copied on its own
     score_hook = None
 
 
 def load_formulas(path):
     try:
-        d = json.load(open(path, encoding="utf-8"))
-    except Exception:
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)
+    except FileNotFoundError:
         return None
     by_id = {h["id"]: h for h in d["hooks"]}
     order = d.get("classify_order") or sorted(by_id)
@@ -63,8 +69,29 @@ def classify(hook, formulas):
     return None, "unclassified"
 
 
+def parse_count(value):
+    """Accept integer counts, thousands separators, and displayed 1.2K/3M counts."""
+    value = (value or "").strip()
+    if not value:
+        return None
+    match = re.fullmatch(r"((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*([kmb]?)",
+                         value, re.IGNORECASE)
+    if not match:
+        return None
+    amount = Decimal(match[1].replace(",", ""))
+    suffix = match[2].lower()
+    if not suffix and amount != amount.to_integral_value():
+        return None
+    factor = {"": 1, "k": 1000, "m": 1000000, "b": 1000000000}[suffix]
+    return int(amount * factor)
+
+
 def read_rows(path):
-    raw = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
+    if path == "-":
+        raw = sys.stdin.read()
+    else:
+        with open(path, encoding="utf-8") as fh:
+            raw = fh.read()
     lines = [l for l in raw.splitlines() if l.strip() and not l.lstrip().startswith("#")]
     if not lines:
         return []
@@ -79,23 +106,23 @@ def read_rows(path):
         if len(cells) < len(cols):
             cells += [""] * (len(cols) - len(cells))
         r = dict(zip(cols, [c.strip() for c in cells]))
-        try:
-            r["views"] = int(re.sub(r"[^\d]", "", r.get("views", "")) or 0)
-        except ValueError:
-            continue
+        r["views"] = parse_count(r.get("views", "")) or 0
         for k in ("followers", "median"):
-            digits = re.sub(r"[^\d]", "", r.get(k, "") or "")
-            r[k] = int(digits) if digits else None
+            r[k] = parse_count(r.get(k, ""))
         if r["views"] and r.get("hook"):
             rows.append(r)
     return rows
 
 
 def analyse(rows, formulas):
-    used_median = any(r.get("median") for r in rows)
+    baseline_counts = {}
     for r in rows:
         base = r.get("median") or r.get("followers") or 0
         r["baseline"] = base
+        source = ("account median" if r.get("median") else
+                  "follower count" if r.get("followers") else "unavailable")
+        r["baseline_source"] = source
+        baseline_counts[source] = baseline_counts.get(source, 0) + 1
         r["outlier"] = round(r["views"] / base, 2) if base else None
         r["formula_id"], r["formula"] = classify(r["hook"], formulas)
         r["words"] = len(WORD_RE.findall(r["hook"]))
@@ -116,7 +143,8 @@ def analyse(rows, formulas):
     for r in top:
         counts[r["formula"]] = counts.get(r["formula"], 0) + 1
     return {
-        "baseline": "account median" if used_median else "follower count",
+        "baseline": next(iter(baseline_counts)) if len(baseline_counts) == 1 else "mixed baselines",
+        "baseline_counts": baseline_counts,
         "n": len(ranked),
         "accounts": len({r.get("account", "") for r in ranked}),
         "reels": ranked,
@@ -165,13 +193,18 @@ def to_markdown(a):
     for r in a["reels"]:
         mult = f"{r['outlier']:.1f}x" if r["outlier"] else "?"
         lines += [f"## {mult}  {r['formula']}  ({r.get('account', '')})",
-                  f"- views: {r['views']:,}  baseline: {r['baseline']:,}",
+                  f"- views: {r['views']:,}  baseline: {r['baseline']:,} ({r['baseline_source']})",
                   f"- hook score: {r['hook_score']}  words: {r['words']}",
                   f"- hook: \"{r['hook']}\"", ""]
     return "\n".join(lines) + "\n"
 
 
 def main():
+    # Redirected Windows streams can default to an ANSI code page. The CLI
+    # uses UTF-8 for pipes as well as files; imports keep their caller's streams.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Rank collected reels by outlier multiple.")
     ap.add_argument("input", nargs="?", default="-", help="TSV file, or - for stdin")
     ap.add_argument("--hooks", default=HOOKS, help="path to ig-reel/hooks.json")
@@ -179,12 +212,18 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    rows = read_rows(args.input)
+    try:
+        rows = read_rows(args.input)
+    except (OSError, UnicodeError, ValueError) as exc:
+        ap.error(str(exc))
     if not rows:
         print("no usable rows. Need a tab-separated file with at least views and hook.",
               file=sys.stderr)
         sys.exit(2)
-    formulas = load_formulas(args.hooks)
+    try:
+        formulas = load_formulas(args.hooks)
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError, re.error) as exc:
+        ap.error(f"cannot load hook formulas: {exc}")
     a = analyse(rows, formulas)
     if not formulas:
         print("note: hooks.json not found, formulas not named. Pass --hooks.", file=sys.stderr)
@@ -197,8 +236,12 @@ def main():
         render(a)
     if args.out:
         path = os.path.expanduser(args.out)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        open(path, "w", encoding="utf-8").write(to_markdown(a))
+        try:
+            os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(to_markdown(a))
+        except (OSError, UnicodeError) as exc:
+            ap.error(str(exc))
         print(f"wrote {path}", file=sys.stderr)
 
 

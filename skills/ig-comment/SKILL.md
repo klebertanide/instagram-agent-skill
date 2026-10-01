@@ -9,6 +9,27 @@ description: >-
 
 # ig-comment
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 Commenting is the highest-leverage twenty minutes on Instagram and the easiest
 to do badly. A comment near the top of a reel with 40,000 views is seen by more
 people than most accounts' own posts, and it is the one place where a stranger
@@ -61,7 +82,7 @@ Pick by what the post actually is. Never default to type 1.
 ## Output
 
 Give **two options of different types**, labelled, plus one line on which you
-would post and why. Run both through `/ig-human` first: comments are short, so
+would post and why. Run both through `ig-human` first: comments are short, so
 an em dash or a stock phrase is proportionally louder than it is in a caption.
 
 ```
@@ -80,11 +101,12 @@ Post the first. It concedes something and it has a number in it.
 
 ## Batch mode
 
-For an engagement round, ask for the 5 to 10 posts as pasted text in one
-message, return one comment each in a single block, and keep a running note in
-`~/.claude/instagram/log.md` of who has been commented on this week.
-Commenting on the same three accounts every day is visible and it looks like
-exactly what it is.
+For an engagement round, use the provided posts, asking for missing post
+content in one message if necessary. Return one comment each in a single block.
+If maintaining `$INSTAGRAM_DATA_DIR/log.md`, label prepared comments `draft`.
+Record `posted` and who was commented on only after the user confirms they
+posted it. Drafts do not establish engagement history. Commenting on the same
+three accounts every day is visible and it looks like exactly what it is.
 
 ## Never
 

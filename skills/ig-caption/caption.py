@@ -77,6 +77,8 @@ def render_box(window, truncated, out=sys.stdout, width=52):
 
 
 def analyse(text, cut=TRUNCATE, keywords=None):
+    if cut <= 0:
+        raise ValueError("truncate must be greater than zero")
     text = text.rstrip()
     stripped = text.strip()
     chars = len(stripped)
@@ -193,6 +195,11 @@ def render(a, out=sys.stdout):
 
 
 def main():
+    # Redirected Windows streams can default to an ANSI code page. The CLI
+    # uses UTF-8 for pipes as well as files; imports keep their caller's streams.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Lint an Instagram caption.")
     ap.add_argument("input", nargs="?", default="-", help="caption file, or - for stdin")
     ap.add_argument("--truncate", type=int, default=TRUNCATE,
@@ -201,7 +208,16 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
+    if args.truncate <= 0:
+        ap.error("--truncate must be greater than zero")
+    try:
+        if args.input == "-":
+            raw = sys.stdin.read()
+        else:
+            with open(args.input, encoding="utf-8") as fh:
+                raw = fh.read()
+    except (OSError, UnicodeError) as exc:
+        ap.error(str(exc))
     a = analyse(raw, cut=args.truncate, keywords=args.keywords.split(","))
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))

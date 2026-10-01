@@ -9,17 +9,42 @@ description: >-
 
 # ig-plan
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 The control room. Everything else in this pack executes; this decides what gets
 executed. Run it once a week, on the same day.
 
 ## Input
 
-If `~/.claude/instagram/voice.md`, `swipe.md` and `log.md` exist, read them.
-The swipe file is the user's own evidence from `/ig-viral` about which formulas
+If `$INSTAGRAM_DATA_DIR/voice.md`, `$INSTAGRAM_DATA_DIR/swipe.md` and
+`$INSTAGRAM_DATA_DIR/log.md` exist, read them.
+The swipe file is the user's own evidence from `ig-viral` about which formulas
 are landing in their niche right now, and it outranks anything in this file.
-The log stops the plan repeating a theme from the last fortnight.
+The log helps avoid repeating a theme from the last fortnight. Distinguish
+`draft`, `approved` and `posted` entries; do not count unposted plans as publication
+history.
 
-If they do not exist, ask for four things and write them down:
+Use information already supplied even if the files do not exist. Ask only
+for missing necessary details from these four things and write them down:
 
 1. What the user sells, and to whom.
 2. The three or four themes they want to be known for.
@@ -45,7 +70,7 @@ Mix across the week, never two of the same type back to back:
 | **Offer** | 1 per fortnight | what you sell, said plainly, no apology. Carousel or stories. |
 
 For each slot give: the theme, the specific angle from what actually happened
-this week, the format, and the hook formula number from `ig-reel/hooks.json`.
+this week, the format, and the hook formula number from `../ig-reel/hooks.json`.
 Not a topic, an angle. "AI" is not a plan. "The proposal we lost because the
 draft had an em dash in it" is a Reel.
 
@@ -72,7 +97,7 @@ Anchor times to the audience's timezone, not the user's, if those differ.
 - **2 buyers** - people who could actually buy. Comment for weeks before any
   DM, and never pitch in a comment.
 
-Hand the list to `/ig-comment`.
+Hand the list to `ig-comment`.
 
 ## Output
 
@@ -95,6 +120,6 @@ ENGAGE  (5 reach / 3 peers / 2 buyers)
 Say "write Tuesday" and I will draft it.
 ```
 
-Write the plan to `~/.claude/instagram/plan.md` so the other skills can read
+Write the plan to `$INSTAGRAM_DATA_DIR/plan.md` so the other skills can read
 it. Nothing is scheduled or posted anywhere. This is a plan and the user runs
 it.

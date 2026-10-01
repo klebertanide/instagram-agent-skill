@@ -9,6 +9,27 @@ description: >-
 
 # ig-reply
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 The comment thread under your own post is where reach is decided. Every reply
 is another interaction on the post, replies arriving in the first hour do most
 of the work, and on Instagram a reply can also be a Reel, which is the single
@@ -43,7 +64,7 @@ If a question in the comments is one that thirty other people also have,
 **reply to it with a Reel**. Instagram will attach the comment to the new video
 as a sticker, the person who asked gets notified, and a question with real
 demand behind it becomes a post with the hook already written for you. Flag
-every QUESTION that qualifies and hand it to `/ig-reel` as formula #16.
+every QUESTION that qualifies and hand it to `ig-reel` as formula #16.
 
 ## How to reply
 
@@ -91,5 +112,5 @@ QUESTION -> REEL
 NOISE  (2)  skipped. Replying gives them reach.
 ```
 
-Then the gate: nothing is posted until the user says yes. They paste the
-replies.
+The user pastes the replies. Deliver the requested drafts without another
+approval gate; approval of copy does not mean anything has been posted.

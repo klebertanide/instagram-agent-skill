@@ -23,6 +23,7 @@ Usage
 
 import argparse
 import json
+import math
 import re
 import sys
 
@@ -83,6 +84,10 @@ def split_beats(raw, wps):
 
 
 def analyse(raw, wpm=165, target=None):
+    if not math.isfinite(wpm) or wpm <= 0:
+        raise ValueError("wpm must be a finite number greater than zero")
+    if target is not None and (not math.isfinite(target) or target <= 0):
+        raise ValueError("target must be a finite number greater than zero")
     wps = wpm / 60.0
     beats = split_beats(raw, wps)
     if not beats:
@@ -192,6 +197,11 @@ def render(a, out=sys.stdout):
 
 
 def main():
+    # Redirected Windows streams can default to an ANSI code page. The CLI
+    # uses UTF-8 for pipes as well as files; imports keep their caller's streams.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Time a Reel script into a beat sheet.")
     ap.add_argument("input", nargs="?", default="-", help="script file, or - for stdin")
     ap.add_argument("--wpm", type=float, default=165, help="speaking rate (default 165)")
@@ -199,8 +209,20 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
-    a = analyse(raw, wpm=args.wpm, target=args.target)
+    # Validate before reading stdin, so a bad option never waits for input.
+    if not math.isfinite(args.wpm) or args.wpm <= 0:
+        ap.error("--wpm must be a finite number greater than zero")
+    if args.target is not None and (not math.isfinite(args.target) or args.target <= 0):
+        ap.error("--target must be a finite number greater than zero")
+    try:
+        if args.input == "-":
+            raw = sys.stdin.read()
+        else:
+            with open(args.input, encoding="utf-8") as fh:
+                raw = fh.read()
+        a = analyse(raw, wpm=args.wpm, target=args.target)
+    except (OSError, UnicodeError, ValueError) as exc:
+        ap.error(str(exc))
     if not a:
         print("empty script", file=sys.stderr)
         sys.exit(2)

@@ -10,13 +10,34 @@ description: >-
 
 # ig-audit
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 The only honest source of what works for an account is that account. Every
 rule in every Instagram guide, including the ones in this pack, is a prior.
 The user's own last 30 posts are the evidence.
 
 ## Input
 
-Ask for whichever the user has:
+Use the supplied data first; ask for whichever missing evidence the user has:
 
 - Insights per post: views, reach, interactions, watch time, saves, shares,
   follows, and the non-follower share of reach. Screenshots are fine.
@@ -24,8 +45,11 @@ Ask for whichever the user has:
   screenshot is worth more than the rest combined.
 - Or just the posts and their view counts, which is enough for a first pass.
 
-Also read `~/.claude/instagram/log.md` if it exists, since it records which
-hook formula each post used.
+Also read `$INSTAGRAM_DATA_DIR/log.md` if it exists. Match only entries
+confirmed as `posted` to published posts; approved or drafted scripts are not
+post history. A legacy entry without status needs the user's publication
+confirmation before it is counted as posted. Use actual supplied Insights
+rather than treating a draft log as evidence of performance.
 
 ## What to actually measure
 
@@ -52,7 +76,7 @@ and be willing to conclude something the user will not like:
 
 - **Hold at 3 seconds.** If the top and bottom differ here, it is the hook and
   nothing else, and everything downstream is a distraction.
-- **Hook formula.** Which ids from `ig-reel/hooks.json` are in the top five?
+- **Hook formula.** Which ids from `../ig-reel/hooks.json` are in the top five?
 - **Format.** Reel, carousel, single image.
 - **Length.** Group into under 15s, 15 to 30s, 30 to 60s, over 60s.
 - **Theme.**
@@ -69,7 +93,7 @@ better than inventing one.
 **A reel that gets views and no follows is not a failed reel, it is a profile
 problem.** A reel that gets no views is a hook problem. Separate the two before
 recommending anything. If non-follower reach is high and follows per reach is
-low, stop rewriting hooks and go to `/ig-profile`.
+low, stop rewriting hooks and go to `ig-profile`.
 
 ## Output
 
@@ -99,6 +123,6 @@ STOP: listicles.
 DO MORE: the ones with a cost you paid and a number attached.
 ```
 
-Then hand the conclusions to `/ig-plan` so next week is built on the user's own
-evidence rather than on defaults, and to `/ig-viral` so the swipe file gets
+Then hand the conclusions to `ig-plan` so next week is built on the user's own
+evidence rather than on defaults, and to `ig-viral` so the swipe file gets
 filtered to the formulas that work for this account specifically.

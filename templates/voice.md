@@ -1,10 +1,11 @@
 # voice.md
 
-Copy this to `~/.claude/instagram/voice.md` and fill it in. Every skill in the
-pack reads it. Ten minutes here is the difference between scripts you shoot and
+The installer creates a copy at `~/.agents/instagram/voice.md` for Codex,
+`~/.claude/instagram/voice.md` for Claude, or `.instagram/voice.md` for a project.
+Fill in that copy in your own language. Every skill in the pack reads it. Ten minutes here is the difference between scripts you shoot and
 scripts you rewrite.
 
-If you would rather not fill it in by hand, send Claude three of your own reels
+If you would rather not fill it in by hand, send your agent examples of your own reels
 or captions and say "write my voice.md from these". That works better than
 guessing at the answers.
 

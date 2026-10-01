@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Comment"
+  short_description: "Draft specific comments for Instagram posts and reels"
+  default_prompt: "Use $ig-comment to draft a comment on this Instagram post."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Caption"
+  short_description: "Draft captions and check truncation, hashtags and search terms"
+  default_prompt: "Use $ig-caption to write a caption for my Instagram post."

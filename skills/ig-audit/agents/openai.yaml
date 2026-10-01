@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Audit"
+  short_description: "Analyze Instagram results and plan evidence-based improvements"
+  default_prompt: "Use $ig-audit to analyze my Instagram post performance."

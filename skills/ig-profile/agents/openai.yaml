@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Profile"
+  short_description: "Score and improve an Instagram bio, profile and pinned posts"
+  default_prompt: "Use $ig-profile to review my Instagram profile."

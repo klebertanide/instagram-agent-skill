@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Replies"
+  short_description: "Sort Instagram comments and draft replies in priority order"
+  default_prompt: "Use $ig-reply to draft replies to comments on my Instagram post."

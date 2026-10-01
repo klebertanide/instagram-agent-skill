@@ -9,6 +9,27 @@ description: >-
 
 # ig-carousel
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 Carousels are the highest-dwell format on the grid, because a swipe is an
 interaction and a scroll is not. They also get a second chance: Instagram can
 show a carousel again starting from a later slide to someone who did not engage
@@ -24,7 +45,7 @@ framework with parts, a before and after, a list worth screenshotting. Use a
 Reel when the idea has motion, a face, or a payoff that has to be seen
 happening.
 
-If the idea is one claim, it is neither. Hand it to `/ig-reel` and say so.
+If the idea is one claim, it is neither. Hand it to `ig-reel` and say so.
 
 ## Structure
 
@@ -62,13 +83,16 @@ LAST      CTA       one action. Save, comment a keyword, or follow. One.
 
 ## Building the files
 
-Instagram wants 1080x1350 (4:5), JPEG or PNG, up to 20 items. Build it as HTML
-and print each slide:
+Instagram wants 1080x1350 (4:5), JPEG or PNG, up to 20 items. Check which
+renderer is actually available, then build HTML and export each slide to a
+separate PNG/JPEG using that renderer (for example, browser screenshots with
+an exact 1080x1350 viewport). Inspect dimensions and image output before calling
+files upload-ready. A PDF is a preview, not an Instagram upload format; a PDF
+workflow still needs a real page-to-image export.
 
-```bash
-# one <section> per slide, 1080x1350, page-break-after: always
-# then Chrome headless --print-to-pdf, or any HTML-to-image you already use
-```
+If no renderer is available, deliver the slide copy and HTML, state that image
+export was not performed, and identify the missing renderer. Never claim
+PNGs/JPEGs were generated without actual files.
 
 Write the HTML with `width:1080px; height:1350px`, a single accent colour, and
 type no smaller than 32px, because this is read on a phone at a third of its
@@ -78,12 +102,13 @@ not invent a palette.
 ## Output
 
 The slide-by-slide copy first, as a numbered list the user can read in ten
-seconds and edit before anything is rendered. Then the **caption**, which for a
-carousel is Job B in `/ig-caption`: the caption is doing work here, because the
-cover has already used its six words.
+seconds, then the **caption**, which for a carousel is Job B in `ig-caption`:
+the caption is doing work here, because the cover has already used its six words.
 
-Run both through `/ig-human`. Build the files only after the user approves the
-copy.
+Run both through `ig-human`. If the user requested a finished carousel or
+files, create and render them within that request without another approval
+gate. If only copy was requested, deliver copy. List the actual exported files,
+or clearly label HTML/copy as awaiting image export.
 
 ```
 CAROUSEL  ·  8 slides

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Humanizer"
+  short_description: "Clean draft typography and review local writing heuristics"
+  default_prompt: "Use $ig-human to review and improve the wording of my draft."

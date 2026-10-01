@@ -12,13 +12,34 @@ description: >-
 
 # ig-viral
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 The research skill. Everything else in this pack writes; this one goes and
 looks. Run it monthly, not daily. Formulas last a season.
 
 One tool lives in this folder and it runs:
 
 ```bash
-python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md
+python3 "$SKILL_DIR/swipe.py" "/absolute/path/captured.tsv" --out "$INSTAGRAM_DATA_DIR/swipe.md"
 ```
 
 ## The one idea that makes this worth doing
@@ -37,7 +58,9 @@ works at 2M followers often works because it is at 2M followers.
 
 ## Step 1: pick the accounts
 
-Ask the user for 6 to 12 accounts, or propose them and get approval:
+Use accounts already supplied or saved in the context. If needed, ask for
+accounts or propose a research shortlist; do not require a separate approval
+for read-only research the user has already requested. Aim for 6 to 12:
 
 - **4 direct** - same niche, same offer, slightly ahead.
 - **4 adjacent** - different niche, same audience. This is where formats get
@@ -45,15 +68,21 @@ Ask the user for 6 to 12 accounts, or propose them and get approval:
 - **2 to 4 outsized** - much bigger accounts, for format only, never for
   cadence or tone.
 
-Also ask them to open their own **Saved collection**. It is the fastest and
-most relevant corpus that exists and it is already filtered by their taste.
+Their own **Saved collection** is a relevant corpus already filtered by their
+taste. Use pasted examples from it when provided, or suggest it if accessible
+research is missing.
 
 ## Step 2: go and look
 
 Use whatever browsing tool this session actually has: an in-app browser, a
 browser extension connected to the user's own Chrome, or a computer-use tool.
-There is no API for this and there does not need to be, because the volume is
-small enough to read.
+Read only accessible pages and evidence; do not assume any browser, transcript
+tool or authenticated Instagram session exists in Codex. If these are unavailable,
+continue with user-provided text, screenshots or a TSV of metrics and hooks.
+Ask only for missing data needed to finish. URLs alone are not evidence of views,
+median or spoken hooks: mark unavailable fields as unknown, never invent them.
+Without reliable view counts and medians, give a qualitative review and explain
+that outlier ranking cannot be computed. Do not run `swipe.py` on fabricated rows.
 
 **Rules that are not negotiable:**
 
@@ -74,7 +103,7 @@ small enough to read.
 | --- | --- |
 | account | handle |
 | followers | from the profile |
-| median | eyeball the last 12 reels and take the middle view count |
+| median | compute the median of the last 12 observable reel view counts |
 | views | this reel |
 | hook | the first line, spoken or on screen, verbatim including bad grammar |
 | on-screen | the first text card, if different |
@@ -85,22 +114,29 @@ Median is the important one. Without it you are back to ranking by follower
 count, which is the thing this skill exists to stop.
 
 **When Instagram will not show you enough:** the same hook grammar runs on
-YouTube Shorts, where view counts and transcripts are public and no login is
-involved. It is a legitimate second corpus, and the spoken hook is easier to
-get:
+YouTube Shorts can be a second corpus when public view counts and captions
+are available; they are not guaranteed. `yt-dlp` is an optional external
+dependency, not bundled here. Check `python3 -m yt_dlp --version` first. Use it
+only if installed and network access is available, or use a transcript tool
+already available in the session. Do not install it silently. Otherwise use
+pasted captions/metrics, and disclose missing evidence. Label Shorts findings
+as Shorts evidence rather than Instagram performance.
+
+For example (replace `en.*` with the source language's caption code):
 
 ```bash
 # view counts for a channel's shorts
 python3 -m yt_dlp --flat-playlist --playlist-end 40 -J \
-  "https://www.youtube.com/@HANDLE/shorts" > channel.json
+  "https://www.youtube.com/@HANDLE/shorts" > "/absolute/path/channel.json"
 
 # the spoken first line of one short, from its auto-captions
 python3 -m yt_dlp --skip-download --write-auto-subs --sub-langs "en.*" \
-  --sub-format json3 -o hook "https://www.youtube.com/watch?v=VIDEO_ID"
+  --sub-format json3 -o "/absolute/path/hook" "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-Take every caption word with a timestamp under 3.0 seconds. That is the hook,
-as said, not as written.
+Read the caption text within the first 3.0 seconds as a candidate hook,
+checking automatic captions against accessible audio when possible. If captions
+are missing or cannot be verified, say so; do not invent a transcript.
 
 ## Step 3: rank it
 
@@ -112,12 +148,14 @@ account	followers	median	views	hook
 ```
 
 ```bash
-python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md
+python3 "$SKILL_DIR/swipe.py" "/absolute/path/captured.tsv" --out "$INSTAGRAM_DATA_DIR/swipe.md"
 ```
 
 It computes the outlier multiple, names the hook formula using the same 26
-formulas `/ig-reel` writes from, scores each hook with `hookscore.py`, and
-prints what separates the top third from the bottom third.
+formulas `ig-reel` writes from, scores each hook with `hookscore.py`, and
+prints what separates the top third from the bottom third. Classification and
+hook scoring are English heuristics: for other languages, keep the original
+hook, review formulas manually, and report unclassified/low-score limits.
 
 ## Step 4: say what it means, carefully
 
@@ -141,7 +179,7 @@ difference between research and horoscopes.
 ## Step 5: turn it into something to shoot
 
 For the top three formulas, write **the user's version**: their own story,
-their own number, in the shape that is working. Hand each one to `/ig-reel`
+their own number, in the shape that is working. Hand each one to `ig-reel`
 with the formula id already chosen.
 
 Never hand back "make a reel like this one". Hand back a hook line they could
@@ -171,8 +209,8 @@ YOUR VERSION
   ...
 ```
 
-Write the swipe file to `~/.claude/instagram/swipe.md`. `/ig-reel` and
-`/ig-plan` both read it, which is the point: after this runs once, the rest of
+Write the swipe file to `$INSTAGRAM_DATA_DIR/swipe.md`. `ig-reel` and
+`ig-plan` both read it, which is the point: after this runs once, the rest of
 the pack is working from the user's own evidence instead of from defaults.
 
 Nothing is posted, followed, liked or messaged by this skill. It reads.

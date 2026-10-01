@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Stories"
+  short_description: "Draft story sequences, stickers and audience follow-ups"
+  default_prompt: "Use $ig-story to plan an Instagram story sequence."

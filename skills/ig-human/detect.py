@@ -38,6 +38,7 @@ CONTRACTIONS = re.compile(r"\b\w+'(?:s|t|re|ve|ll|d|m)\b", re.IGNORECASE)
 PRONOUNS = re.compile(r"\b(i|me|my|mine|we|us|our|you|your)\b", re.IGNORECASE)
 NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
 PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+SEMANTIC_JOINERS = {"\u200c", "\u200d"}
 
 
 def clamp(n):
@@ -105,7 +106,10 @@ def check_slop(text, lex):
 
 def check_fingerprint(text):
     """Characters a phone keyboard does not produce."""
-    invisible = sum(1 for c in text if unicodedata.category(c) == "Cf")
+    # Emoji sequences and several writing systems need these joiners; they
+    # are not evidence that a draft was machine-written.
+    invisible = sum(1 for c in text
+                    if unicodedata.category(c) == "Cf" and c not in SEMANTIC_JOINERS)
     em = text.count("—")
     curly = sum(text.count(c) for c in "‘’“”")
     ellip = text.count("…")
@@ -191,6 +195,11 @@ def render(results, overall, verdict, label=None, out=sys.stdout):
 
 
 def main():
+    # Redirected Windows streams can default to an ANSI code page. The CLI
+    # uses UTF-8 for pipes as well as files; imports keep their caller's streams.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Score how machine-written a draft looks.")
     ap.add_argument("input", nargs="?", default="-", help="file, or - for stdin")
     ap.add_argument("compare", nargs="?", help="second file, to show before/after")
@@ -198,16 +207,30 @@ def main():
     ap.add_argument("--lexicon", default=LEX)
     args = ap.parse_args()
 
-    lex = json.load(open(args.lexicon, encoding="utf-8"))
-    read = lambda p: sys.stdin.read() if p == "-" else open(p, encoding="utf-8").read()
+    if args.input == "-" and args.compare == "-":
+        ap.error("stdin can only be read once; pass a file for one of the drafts")
 
-    targets = [(args.input, read(args.input))]
-    if args.compare:
-        targets.append((args.compare, read(args.compare)))
+    def read(path):
+        if path == "-":
+            return sys.stdin.read()
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+    try:
+        with open(args.lexicon, encoding="utf-8") as fh:
+            lex = json.load(fh)
+        targets = [(args.input, read(args.input))]
+        if args.compare:
+            targets.append((args.compare, read(args.compare)))
+    except (OSError, UnicodeError, ValueError) as exc:
+        ap.error(str(exc))
 
     payload = []
     for name, text in targets:
-        results, overall, verdict = run(text, lex)
+        try:
+            results, overall, verdict = run(text, lex)
+        except (ValueError, KeyError, TypeError) as exc:
+            ap.error(f"invalid lexicon: {exc}")
         payload.append({
             "source": name,
             "checks": {k: {"score": round(v[0], 1), "detail": v[1]} for k, v in results.items()},

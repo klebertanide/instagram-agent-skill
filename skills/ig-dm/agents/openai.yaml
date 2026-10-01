@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram DM"
+  short_description: "Draft keyword replies, warm messages and collaboration pitches"
+  default_prompt: "Use $ig-dm to draft an Instagram message for this conversation."

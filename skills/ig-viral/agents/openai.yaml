@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Research"
+  short_description: "Rank supplied reel data and build an attributed swipe file"
+  default_prompt: "Use $ig-viral to analyze which reels are working in my niche."

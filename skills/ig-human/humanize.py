@@ -5,10 +5,12 @@ humanize.py - strip the machine fingerprint out of a draft.
 Three passes, in this order:
 
   1. INVISIBLE   delete or normalise the characters a human keyboard never
-                 produces: zero-width joiners, word joiners, soft hyphens,
+                 produces: word joiners, soft hyphens,
                  BOMs, Unicode tag characters, non-breaking and narrow spaces.
                  These survive copy-paste and are the most mechanical tell in
                  any generated text.
+                 ZWJ/ZWNJ are preserved because emoji and writing systems use
+                 them. Use --strip-joiners only if deletion is intentional.
   2. TYPOGRAPHIC em dash -> comma, en dash -> hyphen, curly quotes -> straight,
                  ellipsis -> three dots, bullet -> hyphen.
   3. LEXICAL     replace the slop lexicon in slop.json with plain words,
@@ -38,6 +40,7 @@ LEX = os.path.join(HERE, "slop.json")
 
 URL_RE = re.compile(r"https?://\S+|www\.\S+|\S+@\S+\.\S+")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
+SEMANTIC_JOINERS = {"\u200c", "\u200d"}
 
 
 def load_lexicon(path=LEX):
@@ -70,11 +73,13 @@ def restore_urls(text, found):
     return text
 
 
-def pass_invisible(text, lex):
+def pass_invisible(text, lex, strip_joiners=False):
     """Delete or space-normalise invisible characters. Returns (text, hits)."""
     hits = []
     for entry in lex["invisible"]:
         cp = _cp(entry["cp"])
+        if not strip_joiners and not isinstance(cp, tuple) and chr(cp) in SEMANTIC_JOINERS:
+            continue
         if isinstance(cp, tuple):
             pattern = "[" + re.escape(chr(cp[0])) + "-" + re.escape(chr(cp[1])) + "]"
         else:
@@ -85,11 +90,14 @@ def pass_invisible(text, lex):
                          "action": entry["action"]})
             text = re.sub(pattern, "" if entry["action"] == "delete" else " ", text)
     # Any remaining Cf (format) character is invisible by definition.
-    stray = [c for c in text if unicodedata.category(c) == "Cf"]
+    def removable(c):
+        return unicodedata.category(c) == "Cf" and (strip_joiners or c not in SEMANTIC_JOINERS)
+
+    stray = [c for c in text if removable(c)]
     if stray:
         hits.append({"name": "other invisible format chars", "count": len(stray),
                      "action": "delete"})
-        text = "".join(c for c in text if unicodedata.category(c) != "Cf")
+        text = "".join(c for c in text if not removable(c))
     return text, hits
 
 
@@ -203,10 +211,10 @@ def restore_capitals(original, text):
                   lambda m: m.group(0)[:-1] + m.group(1).upper(), text)
 
 
-def humanize(text, lex):
+def humanize(text, lex, strip_joiners=False):
     raw_for_case = text
     text, urls = protect_urls(text)
-    text, inv = pass_invisible(text, lex)
+    text, inv = pass_invisible(text, lex, strip_joiners=strip_joiners)
     text, typo = pass_typographic(text, lex)
     text, lexi = pass_lexical(text, lex)
     text = restore_capitals(raw_for_case, text)
@@ -254,25 +262,45 @@ def render_report(report, out=sys.stderr):
 
 
 def main():
+    # Redirected Windows streams can default to an ANSI code page. The CLI
+    # uses UTF-8 for pipes as well as files; imports keep their caller's streams.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Strip the machine fingerprint out of a draft.")
     ap.add_argument("input", nargs="?", default="-", help="file, or - for stdin")
     ap.add_argument("-o", "--out", help="write cleaned text here instead of stdout")
     ap.add_argument("--report", action="store_true", help="print what changed, to stderr")
     ap.add_argument("--json", action="store_true", help="emit {text, report} as JSON")
     ap.add_argument("--lexicon", default=LEX, help="path to slop.json")
+    ap.add_argument("--strip-joiners", action="store_true",
+                    help="also remove ZWJ/ZWNJ (can alter emoji and non-English writing)")
     args = ap.parse_args()
 
-    raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
-    lex = load_lexicon(args.lexicon)
-    clean, report = humanize(raw, lex)
+    try:
+        if args.input == "-":
+            raw = sys.stdin.read()
+        else:
+            with open(args.input, encoding="utf-8") as fh:
+                raw = fh.read()
+        lex = load_lexicon(args.lexicon)
+        clean, report = humanize(raw, lex, strip_joiners=args.strip_joiners)
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError) as exc:
+        ap.error(str(exc))
 
     if args.json:
         print(json.dumps({"text": clean, "report": report}, indent=2, ensure_ascii=False))
         return
     if args.out:
-        with open(args.out, "w", encoding="utf-8") as fh:
-            fh.write(clean)
-        print(f"wrote {args.out}", file=sys.stderr)
+        path = os.path.expanduser(args.out)
+        try:
+            parent = os.path.dirname(os.path.abspath(path))
+            os.makedirs(parent, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(clean)
+        except (OSError, UnicodeError) as exc:
+            ap.error(str(exc))
+        print(f"wrote {path}", file=sys.stderr)
     else:
         sys.stdout.write(clean)
     if args.report:

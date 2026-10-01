@@ -1,0 +1,40 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "instagram-agent",
+  "version": "1.1.0",
+  "description": "Thirteen Instagram skills for Codex and Claude: scripts, captions, carousels, research, planning, profile reviews and local text checks.",
+  "author": {
+    "name": "Jake Schincariol",
+    "url": "https://opusjake.ai"
+  },
+  "homepage": "https://github.com/klebertanide/instagram-agent-skill",
+  "repository": "https://github.com/klebertanide/instagram-agent-skill",
+  "license": "MIT",
+  "keywords": [
+    "instagram",
+    "reels",
+    "content",
+    "codex",
+    "claude"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Instagram Agent",
+        "shortDescription": "Plan and draft Instagram content with local text checks",
+        "longDescription": "Thirteen skills for Instagram content, research and analytics. Six Python helpers run locally without dependencies. Produces drafts and files for manual posting.",
+        "developerName": "Kleber Tanide",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://github.com/klebertanide/instagram-agent-skill",
+        "defaultPrompt": [
+          "Use $instagram-agent:ig-reel to turn my idea into an Instagram Reel.",
+          "Use $instagram-agent:ig-plan to plan my Instagram content for this week."
+        ]
+      }
+    }
+  }
+}

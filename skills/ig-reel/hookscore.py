@@ -168,17 +168,17 @@ def check_frontload(text):
     if not w:
         return 0.0, "empty"
     low = [x.lower().strip("'’") for x in w]
-    opener = " ".join(low[:2])
     penalty = 0
     hit_opener = None
     for weak in WEAK_OPENERS:
-        if opener.startswith(weak) or low[0] == weak:
+        weak_words = weak.split()
+        if low[:len(weak_words)] == weak_words:
             penalty, hit_opener = 30, weak
             break
     payload = None
     for i, token in enumerate(low):
         if (token in STAKES or token in SPOKEN_NUMBERS or token in MONEY_WORDS
-                or NUMBER_RE.match(w[i]) or (i and PROPER_RE.match(w[i]))):
+                or NUMBER_RE.match(w[i]) or (i and re.fullmatch(r"[A-Z][a-z]{2,}", w[i]))):
             payload = i
             break
     if payload is None:
@@ -269,16 +269,28 @@ def render_table(rows, out=sys.stdout):
 
 
 def main():
+    # Redirected Windows streams can default to an ANSI code page. The CLI
+    # uses UTF-8 for pipes as well as files; imports keep their caller's streams.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description="Score a Reel hook on five properties.")
     ap.add_argument("input", nargs="?", default="-", help="file with one hook per line, or -")
     ap.add_argument("--hook", help="score a single hook given on the command line")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    if args.hook:
-        lines = [args.hook]
+    if args.hook is not None:
+        lines = [args.hook.strip()] if args.hook.strip() else []
     else:
-        raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
+        try:
+            if args.input == "-":
+                raw = sys.stdin.read()
+            else:
+                with open(args.input, encoding="utf-8") as fh:
+                    raw = fh.read()
+        except (OSError, UnicodeError) as exc:
+            ap.error(str(exc))
         lines = [l.strip() for l in raw.splitlines() if l.strip()]
     if not lines:
         print("nothing to score", file=sys.stderr)

@@ -1,5 +1,6 @@
-.DS_Store
 __pycache__/
-*.pyc
+*.py[cod]
+.instagram/
+.agents/skills/
+instagram-config.json
 .venv/
-*.tmp

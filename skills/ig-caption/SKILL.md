@@ -10,11 +10,32 @@ description: >-
 
 # ig-caption
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 One tool lives in this folder and it runs:
 
 ```bash
-python3 caption.py caption.txt
-python3 caption.py caption.txt --keywords "client proposals,agency pricing"
+python3 "$SKILL_DIR/caption.py" "/absolute/path/caption.txt"
+python3 "$SKILL_DIR/caption.py" "/absolute/path/caption.txt" --keywords "client proposals,agency pricing"
 ```
 
 It prints the caption the way the feed prints it: the first 125 characters in a
@@ -34,8 +55,8 @@ that makes the ask make sense, and the words people search.
 cover that opens a loop. Here line one is the hook and it works exactly like a
 Reel hook: concrete, short, and cut off at a cliff rather than mid-clause.
 
-Ask which one you are writing. If the user has a Reel with a strong hook,
-write A and say why.
+Infer the job from the supplied asset. If the user has a Reel with a strong
+hook, write A and say why. Ask only if the format or caption's purpose is unclear.
 
 ## The shape
 
@@ -75,10 +96,11 @@ found for goes in the caption as a phrase a human would type, in a sentence
 that reads normally. "Client proposals" as words in line three, not
 "#clientproposals" in a block at the bottom.
 
-Ask for two or three of those terms, then pass them to the linter:
+Use two or three search terms from the supplied context, asking only if they
+cannot be inferred confidently, then pass them to the linter:
 
 ```bash
-python3 caption.py draft.txt --keywords "client proposals,agency pricing"
+python3 "$SKILL_DIR/caption.py" "/absolute/path/draft.txt" --keywords "client proposals,agency pricing"
 ```
 
 ## Rules
@@ -100,10 +122,12 @@ python3 caption.py draft.txt --keywords "client proposals,agency pricing"
 
 1. Decide Job A or Job B and say which.
 2. Draft it.
-3. Run `/ig-human` on it. Captions are short, so slop is louder here than
+3. Run `ig-human` on it. Captions are short, so slop is louder here than
    anywhere else in the pack.
-4. Run `caption.py` with the user's search terms. Fix every FAIL. Decide on
-   every WARN out loud rather than silently.
+4. Run `caption.py` with the user's search terms. Fix supported mechanical
+   failures, including length and hashtag limits. Review every WARN and FAIL;
+   ask/CTA detection is English-focused and a non-English caption needs a
+   manual check. Do not translate or add another ask merely to change the score.
 5. Print the copy-ready block, then the receipt:
 
 ```

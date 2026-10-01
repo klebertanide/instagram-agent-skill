@@ -1,0 +1,4 @@
+interface:
+  display_name: "Instagram Carousel"
+  short_description: "Draft carousel copy and export slides with a renderer"
+  default_prompt: "Use $ig-carousel to turn my idea into an Instagram carousel."

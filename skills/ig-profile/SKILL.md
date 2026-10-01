@@ -10,6 +10,27 @@ description: >-
 
 # ig-profile
 
+## Runtime (Codex and Claude)
+
+- `SKILL_DIR` is the absolute directory of this loaded `SKILL.md`; resolve all
+  scripts/resources there, never the working directory. Siblings use `../ig-human/`
+  or `../ig-reel/`. Substitute real absolute paths for `$SKILL_DIR` and
+  `$INSTAGRAM_DATA_DIR` before executing, or explicitly assign/quote those variables.
+- Select the absolute data directory: explicit `INSTAGRAM_AGENT_HOME` > nearest
+  existing `.instagram` in the user's project ancestry > `data_dir` from
+  `instagram-config.json` beside this skill > `~/.agents/instagram` (Codex) or
+  `~/.claude/instagram` (Claude). Create it for writes. Codex may read a missing
+  state file from the matching `~/.claude/instagram/` file; always write selected dir.
+- Cross-skill names mean follow their instructions, not execute shell/slash
+  commands. Codex user prompts can invoke `$ig-reel`, for example.
+- Use an available Python 3.10+ interpreter (`python3`, `python`, or `py -3`).
+  If it is unavailable, explain the missing requirement; never invent tool scores.
+- Read `voice.md` when present and use the user's language and supplied context;
+  ask only for missing essentials.
+  Requested local drafts/files need no repeated approval. The user publishes.
+- Script language heuristics are English-focused. For other languages, preserve
+  natural wording, review manually and explain score limits; do not chase English PASS.
+
 Almost everybody optimises the wrong thing here. The profile is not a
 storefront people browse. It is a **decision screen**, arrived at from one
 reel, and it gets about three seconds to answer one question: is there more of
@@ -17,10 +38,12 @@ that here, and is it for me.
 
 ## Input
 
-Ask the user to paste or screenshot: the name field, the handle, the bio, what
-the link points to, the highlight names, what is pinned, and the first nine
-grid covers. A screenshot of the top of the profile plus the first two grid
-rows is enough for a first pass.
+Use the supplied profile information. For missing items, ask the user to
+paste or screenshot: the name field, handle, bio, link destination, highlight
+names, pinned posts and first nine grid covers. A screenshot of the top of the
+profile plus the first two grid rows is enough for a first pass. Mark unseen
+rubric items unknown and report the observed score/coverage instead of making
+up profile details or awarding a full score without evidence.
 
 Do not log into Instagram on their behalf.
 
@@ -74,7 +97,7 @@ readable in one glance.
 ## Output
 
 Score table, then the rewrites as copy-ready blocks in fix-first order, each
-run through `/ig-human`. Re-score at the end and show the delta honestly. If
+run through `ig-human`. Re-score at the end and show the delta honestly. If
 the rewrite reaches 84 and not 98, say 84, and say what the rest needs, which
 is usually a grid, a story habit and a pinned post that does not exist yet.
 None of that is a rewrite.
