@@ -1,0 +1,36 @@
+{
+  "platform": "Lovable",
+  "project_id": "bb8f79c5-e028-4e65-9cee-488adc28a7e6",
+  "source_commit": "91bd17b24e6cb27d1206ff94eb5610847c8c6899",
+  "public_url": "https://instagram-studio.lovable.app",
+  "source_catalog_files": 120,
+  "environment_files_read": false,
+  "environment_files_exported": false,
+  "omitted": [
+    { "path": ".env", "reason": "Environment configuration excluded without reading its contents." },
+    { "path": "src/test/app-routing.test.tsx", "reason": "Removed obsolete scaffold tests; only asserted a nonempty generic container and failed with the TanStack Start HTML root." }
+  ],
+  "renamed": [
+    { "source": "README.md", "destination": "README.lovable.md" }
+  ],
+  "public_binary_assets": [
+    { "path": "public/favicon.ico", "bytes": 20373, "source": "https://instagram-studio.lovable.app/favicon.ico", "retrieval": "Browser fetch with arrayBuffer preserved the original ICO bytes." }
+  ],
+  "export_adjustments": [
+    "Added Portuguese README.md and EXPORT.json.",
+    "Added .env/.env.* exclusions and .env.example exception to .gitignore.",
+    "Removed the obsolete scaffold routing test; runtime and vendored editorial core remain unchanged."
+  ],
+  "validation": {
+    "node": "24.19.0",
+    "bun": "1.4.2",
+    "frozen_install": "passed",
+    "tests": { "passed": 66, "failed": 0, "files": 5 },
+    "typecheck": "passed",
+    "production_build": "passed",
+    "client_bundle_server_only_identifier_check": "passed",
+    "lint": "original formatting errors remain; not part of the passing validation set",
+    "cloud_credentials_used": false,
+    "database_migrations_executed": false
+  }
+}

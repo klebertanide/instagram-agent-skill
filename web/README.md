@@ -1,4 +1,7 @@
-# Instagram Studio
+# Instagram Studio — implementação AppDeploy anterior
+
+**Site atual:** [Instagram Studio no Lovable](https://instagram-studio.lovable.app).
+O código da hospedagem atual está em [../cloud/](../cloud/README.md).
 
 **Primeira implantação AppDeploy:** https://instagram-studio-h5j8fs.v2.appdeploy.ai/
 
@@ -6,7 +9,7 @@
 `402 APP_TEMPORARILY_UNAVAILABLE`, inclusive no healthcheck. A nova revisão de
 prompts e validação factual está neste repositório e ainda não foi implantada:
 o AppDeploy bloqueou novos deploys por créditos até 03/10/2026 às 00:00 UTC.
-Uma hospedagem alternativa está sendo preparada no Lovable.
+Esta implementação foi substituída pela hospedagem no Lovable.
 
 Os dados públicos de implantação ficam em [deployment.json](deployment.json).
 

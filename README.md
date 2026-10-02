@@ -24,7 +24,7 @@ see it.
 
 ## Use in your browser
 
-Open [Instagram Studio](https://instagram-studio-h5j8fs.v2.appdeploy.ai/),
+Open [Instagram Studio](https://instagram-studio.lovable.app),
 a Portuguese web app with all 13 tools, server-side AI and text checks, voice
 profiles, a private cloud library, a planning calendar and carousel PNG exports.
 No terminal, Codex installation or provider API key is required to use the site.
@@ -33,12 +33,13 @@ Start with **Minha voz**, then choose a tool in **Criar**. Save your recovery
 code in **Seu espaço** to open the same private workspace on another device.
 Content is prepared for your review and manual posting to Instagram.
 
-The web source and deployment contracts are in [web/](web/README.md). The site
-uses AppDeploy AI; the independent Codex skill installation remains available below.
+The deployed source is in [cloud/](cloud/README.md). Hosting, the private
+database and AI use Lovable Cloud in the maintainer's account. Usage follows
+the platform's limits and credits. The independent Codex skill installation
+remains available below.
 
-**Hosting status:** the initial AppDeploy backend is currently unavailable
-(HTTP 402); the source revision is complete and an alternative Lovable
-deployment is being prepared.
+The earlier AppDeploy implementation is retained in [web/](web/README.md).
+Its backend became unavailable (HTTP 402); it is not the current host.
 
 ## Install in Codex
 
