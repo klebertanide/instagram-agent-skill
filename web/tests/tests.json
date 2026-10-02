@@ -1,0 +1,123 @@
+[
+  {
+    "name": "Analisar referências reais e conservar o rascunho na nuvem",
+    "sanity": true,
+    "viewport": "desktop",
+    "covers": [
+      "POST /api/workspace: criação do espaço anônimo",
+      "POST /api/analyze: análise determinística e ranking de referências",
+      "POST /api/drafts: criar e listar rascunhos",
+      "Biblioteca: conservação do conteúdo e da análise após recarregar"
+    ],
+    "description": "Verifica o fluxo mais rápido de análise no servidor até um rascunho persistido, sem depender de geração por IA.",
+    "steps": [
+      "Abra o app em um espaço novo. Em Criar, escolha Referências.",
+      "No campo dos dados das referências, cole um CSV com três linhas separadas por quebras reais de linha: cabeçalho account,views,median,hook; segunda linha @propostasqa,400000,10000,Propostas de 5 horas para 20 minutos; terceira linha @rotinaqa,90000,30000,Minha rotina de revisão de propostas.",
+      "Use Revisar texto. Verifique o ranking renderizado: @propostasqa vem antes de @rotinaqa; suas razões sobre a mediana são 40x e 3x, respectivamente.",
+      "Use Salvar rascunho. Abra a Biblioteca e localize o rascunho de Referências criado neste fluxo.",
+      "Recarregue a página, volte à Biblioteca e abra esse rascunho. Confirme que as duas contas e seus dados continuam disponíveis no conteúdo ou no painel de análise."
+    ],
+    "expected": "A análise usa os dados fornecidos e ordena as duas referências por 40x e 3x, sem anunciar coleta de dados no Instagram. O rascunho é recuperado da nuvem após recarregar e conserva as duas referências e seus valores."
+  },
+  {
+    "name": "Persistir a voz, isolar dois espaços e recuperar o espaço correto",
+    "viewport": "desktop",
+    "covers": [
+      "POST /api/workspace: criar, abrir e validar o código de acesso",
+      "POST /api/profile: ler e salvar o perfil de voz",
+      "POST /api/drafts: conservação e isolamento da biblioteca por espaço",
+      "Minha voz: conservação dos campos após recarregar",
+      "Seu espaço: recuperação entre navegadores e isolamento de dados",
+      "Credenciais inválidas: negar acesso sem substituir o espaço atual"
+    ],
+    "description": "Verifica que dois visitantes anônimos têm perfis e bibliotecas separados e que somente um código válido recupera os dados correspondentes.",
+    "steps": [
+      "Ator A: em uma sessão de navegador própria, abra Minha voz. Preencha o nome da marca com Estúdio QA A, o perfil com @propostasqa, o público com profissionais que elaboram propostas e o tom com direto e próximo. Em fatos ou resultados reais, informe: Reduzimos o tempo de proposta de 5 horas para 20 minutos usando um modelo. Salve o perfil.",
+      "Ator A: em Criar, selecione Legenda, informe Conteúdo privado QA A: propostas de 5 horas para 20 minutos, use Revisar texto e Salvar rascunho. Na Biblioteca, abra o registro, altere seu título para Rascunho QA A e salve as alterações. Esse preparo não precisa de geração por IA.",
+      "Ator A: recarregue e confirme que os campos da voz e Rascunho QA A continuam disponíveis. Em Minha voz, use Atualizar perfil para conferir também a leitura explícita do perfil salvo. Em Seu espaço, guarde seu código de acesso completo para usar nesta mesma verificação.",
+      "Ator B: em uma sessão de navegador independente, abra o app e Minha voz. Confirme que nenhum campo contém Estúdio QA A ou @propostasqa e que Rascunho QA A não aparece na Biblioteca. Salve o nome da marca Estúdio QA B e o perfil @rotinaqa. Em Criar, revise a legenda Conteúdo privado QA B: rotina de revisão de propostas, salve-a e renomeie o registro para Rascunho QA B. Recarregue e confirme que a voz de B e seu rascunho persistem.",
+      "Ator B: em Seu espaço, tente abrir o código do Ator A depois de alterar somente o último caractere da chave por outro caractere válido, mantendo o formato identificador.chave. Confirme a mensagem de acesso inválido e volte a Minha voz: Estúdio QA B e @rotinaqa devem permanecer.",
+      "Ator B: abra novamente Seu espaço, cole o código original válido do Ator A e use Abrir meu espaço. Em Minha voz, confirme que Estúdio QA A, @propostasqa e o fato de 5 horas para 20 minutos foram recuperados. Na Biblioteca, confirme que Rascunho QA A aparece com seu conteúdo e que Rascunho QA B está ausente. Recarregue e confira que o perfil e a biblioteca do espaço recuperado permanecem disponíveis.",
+      "Ator A: recarregue sua sessão original e confirme que o perfil continua sendo Estúdio QA A; os dados salvos no espaço independente de B não substituíram o perfil de A."
+    ],
+    "expected": "Os perfis e rascunhos A e B persistem em espaços separados na nuvem. Uma chave alterada é recusada sem trocar o espaço de B. O código válido recupera somente o perfil e a biblioteca de A em outro navegador, inclusive após recarregar, sem exigir conta ou acesso ao Instagram."
+  },
+  {
+    "name": "Gerar um Reel, exportar, planejar e concluir o ciclo do rascunho",
+    "viewport": "desktop",
+    "covers": [
+      "POST /api/generate: geração real de Reel pela IA no servidor",
+      "POST /api/generate: fatos fornecidos e estruturas exclusivas da ferramenta",
+      "Resultado: roteiro utilizável, fatos preservados e português",
+      "Copiar texto e baixar arquivo de texto com conteúdo real",
+      "POST /api/drafts: criar, listar, atualizar e excluir",
+      "Biblioteca: edição e persistência do conteúdo, título, status e data",
+      "Calendário: data planejada e consulta do rascunho",
+      "Exclusão: confirmação, cancelamento e ausência após recarregar"
+    ],
+    "description": "Verifica a criação de conteúdo útil e todo o ciclo de edição, planejamento e exclusão persistida de um rascunho.",
+    "steps": [
+      "Em Criar, selecione Reel. Informe: Nosso estúdio reduziu o tempo para elaborar uma proposta de 5 horas para 20 minutos usando um único modelo. Escreva um roteiro em português para mostrar o processo: reunir informações, preencher o modelo e revisar os valores. Esses são os únicos resultados confirmados; não acrescente receita, número de clientes, percentuais ou outras medições, nem mesmo percentuais derivados. Use Criar conteúdo.",
+      "Confira um resultado utilizável com gancho e roteiro, preservando a redução de 5 horas para 20 minutos. O roteiro e suas notas não podem acrescentar percentuais, receita, clientes, resultados, marcadores de exemplo ou pontuações prontas. As notas não podem alegar um score humano, selo PASS ou STRONG, nem duração medida; diferencie essas alegações dos valores realmente calculados e identificados no painel de revisão. Confira que criar um Reel não apresenta slides de carrossel nem Ideias para a semana: slides e schedule devem permanecer vazios para esta ferramenta.",
+      "Use Copiar texto e confira o conteúdo copiado; use Baixar texto e abra o arquivo baixado para confirmar que contém o roteiro e os fatos fornecidos, sem estatísticas ou marcadores inventados e não apenas uma mensagem de sucesso.",
+      "Use Salvar rascunho. Na Biblioteca, abra esse rascunho. Altere Título para Propostas QA: revisão final; em Conteúdo, acrescente a frase Passo final: conferir os valores antes de enviar. Altere o status para planejado e a Data planejada para 2026-10-15. Salve as alterações.",
+      "Recarregue, abra o rascunho pela Biblioteca e confira o novo título, a frase acrescentada, o status Planejado e a data 2026-10-15. Abra o Calendário, escolha Mês e consulte outubro de 2026; localize Propostas QA: revisão final no dia 15 de outubro de 2026.",
+      "Abra o rascunho e use Excluir rascunho. Cancele pelo controle Manter rascunho e confira que o registro continua na Biblioteca.",
+      "Exclua novamente, agora usando Excluir definitivamente. Recarregue e confira que o rascunho não aparece na Biblioteca nem na data correspondente do Calendário."
+    ],
+    "expected": "O Reel preserva os fatos fornecidos e não inventa percentuais, métricas ou pontuações nas notas; não contém slides nem plano semanal. O texto copiado e baixado corresponde ao roteiro. As alterações e a data persistem no calendário correto. Cancelar a exclusão preserva o registro; confirmar remove o rascunho da biblioteca e do calendário."
+  },
+  {
+    "name": "Escolher as treze ferramentas e exportar um carrossel como PNG real",
+    "viewport": "desktop",
+    "covers": [
+      "Criar: navegação entre as treze ferramentas do catálogo",
+      "Formulários: contexto correspondente à ferramenta selecionada",
+      "POST /api/generate: geração real de carrossel pelo handler compartilhado",
+      "POST /api/generate: slides somente no carrossel e ausência de plano semanal",
+      "Resultado: slides legíveis com título e conteúdo",
+      "Exportação de carrossel: arquivo PNG de 1080 por 1350 pixels"
+    ],
+    "description": "Verifica os treze ramos de navegação sem repetir chamadas de IA e comprova a exportação de uma imagem de carrossel utilizável.",
+    "steps": [
+      "Em Criar, percorra as opções Reel, Legenda, Carrossel, Stories, Plano da semana, Revisar texto, Comentário, Respostas, Mensagem, Reaproveitar, Perfil, Resultados e Referências. Em cada seleção, confira a indicação da opção ativa e o campo de contexto e a descrição correspondentes; não gere conteúdo em cada opção.",
+      "Selecione Carrossel. Informe: Explique em 6 slides nosso processo de proposta: reunir informações, preencher o modelo, revisar o escopo, revisar os valores e conferir antes de enviar. Antes eram 5 horas; agora são 20 minutos com um modelo. Use português, uma ideia por slide e uma chamada para salvar. Não invente resultados. Use Criar conteúdo.",
+      "Confira que o resultado apresenta slides individuais, com capa e sequência útil de títulos e textos, preservando os fatos fornecidos. Nenhum slide ou nota pode acrescentar percentuais, resultados, clientes ou pontuações prontas. Confira que o carrossel não apresenta Ideias para a semana: schedule deve permanecer vazio. Confira também que o texto do carrossel pode ser revisado antes da publicação.",
+      "Use Baixar slide 1. Abra o arquivo baixado e confirme que é uma imagem PNG real, com dimensões 1080 por 1350 pixels, exibindo o título e o texto visíveis do primeiro slide.",
+      "Baixe um segundo slide pelo respectivo controle e confirme que seu conteúdo corresponde ao segundo slide, diferindo da capa."
+    ],
+    "expected": "Todas as treze ferramentas apresentam seu próprio contexto. A geração de carrossel produz slides úteis sem métricas inventadas ou plano semanal. Os downloads são imagens PNG reais de 1080×1350 com o conteúdo do slide escolhido, e não HTML, texto ou links sem arquivo."
+  },
+  {
+    "name": "Validar entrada no celular e recuperar o controle após falha de geração",
+    "viewport": "mobile",
+    "covers": [
+      "Layout e controles de criação no celular",
+      "POST /api/workspace: criação confirmada de outro espaço",
+      "Entrada obrigatória: bloquear geração vazia",
+      "POST /api/generate: resposta de erro do backend",
+      "Falha e nova tentativa: preservar contexto e mostrar erro útil",
+      "Biblioteca: nenhuma geração malsucedida salva como resultado"
+    ],
+    "description": "Verifica validação e recuperação de uma falha real injetada no backend, preservando a entrada e permitindo nova tentativa no celular.",
+    "qa_faults": [
+      {
+        "method": "POST",
+        "path": "/api/generate",
+        "status": 503,
+        "body_json": {
+          "error": "A geração está temporariamente indisponível. Tente novamente."
+        }
+      }
+    ],
+    "steps": [
+      "No celular, em Seu espaço, use Criar outro espaço e confirme Criar novo espaço. Abra a Biblioteca e confirme que esse espaço novo está vazio, estabelecendo a comparação antes das tentativas de geração.",
+      "No celular, abra Criar e selecione Reel. Deixe o contexto vazio e tente gerar: o controle deve bloquear a ação ou indicar que é necessário informar o contexto, sem apresentar roteiro ou salvar um rascunho.",
+      "Preencha o contexto com: Reduzimos o tempo de proposta de 5 horas para 20 minutos usando um modelo. Quero um roteiro em português sobre reunir informações, preencher e revisar. Use Criar conteúdo.",
+      "Com a resposta 503 injetada, confira uma mensagem de erro útil, a preservação integral do contexto e a disponibilidade do controle de nova tentativa. Não exija uma duração mínima do estado de carregamento.",
+      "Acione novamente o controle de criação ou nova tentativa. Se a falha injetada continuar ativa, confirme que o erro permanece visível e o contexto continua editável; não espere sucesso enquanto a resposta 503 estiver sendo injetada.",
+      "Abra a Biblioteca e confira que ela continua vazia, como antes das tentativas malsucedidas. Volte a Criar e confirme que pode editar o contexto e usar os controles no viewport móvel sem rolagem horizontal obrigatória."
+    ],
+    "expected": "A entrada vazia é bloqueada. A falha 503 aparece ao usuário sem simular conteúdo gerado ou salvar um rascunho; o texto fornecido permanece intacto e a nova tentativa funciona como ação, inclusive se retornar o mesmo erro. Os controles permanecem utilizáveis no celular."
+  }
+]

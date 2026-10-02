@@ -1,0 +1,11 @@
+{
+  "app_id": "instagram-studio-h5j8fs",
+  "app_name": "Instagram Studio",
+  "url": "https://instagram-studio-h5j8fs.v2.appdeploy.ai/",
+  "app_type": "frontend+backend",
+  "platform": "AppDeploy",
+  "frontend_template": "react-vite",
+  "runtime_status": "platform_unavailable_http_402",
+  "source_status": "revised_awaiting_deployment",
+  "deployment_blocked_until_utc": "2026-10-03T00:00:00Z"
+}

@@ -10,6 +10,25 @@ localmente, sem dependências externas ou chave da API do Instagram.
 
 O pacote prepara o conteúdo. Você publica no Instagram.
 
+## Use pelo navegador
+
+Abra o [Instagram Studio](https://instagram-studio-h5j8fs.v2.appdeploy.ai/).
+As 13 ferramentas estão disponíveis em um site com IA e revisão no servidor,
+perfil de voz, biblioteca privada, calendário e exportação de carrosséis PNG.
+Você não precisa instalar nada, usar o terminal ou configurar uma chave de API.
+
+Comece em **Minha voz**, depois escolha uma ferramenta em **Criar**.
+Em **Seu espaço**, guarde o código de acesso para abrir seus dados em outro
+navegador. O conteúdo fica na nuvem; você revisa e publica no Instagram.
+
+O código do aplicativo e os contratos de implantação estão em [web/](web/README.md).
+O site usa o serviço de IA do AppDeploy; a instalação das skills no Codex abaixo
+continua disponível de forma independente.
+
+**Estado da hospedagem:** o servidor da primeira versão AppDeploy está
+indisponível (HTTP 402). A revisão do código está pronta e uma hospedagem
+alternativa no Lovable está sendo preparada.
+
 ## Instalação
 
 Você precisa de Python 3.10 ou superior e de um cliente Codex com suporte a

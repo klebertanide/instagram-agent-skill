@@ -22,6 +22,24 @@ see it.
 
 **These skills prepare local drafts and files. You post them.**
 
+## Use in your browser
+
+Open [Instagram Studio](https://instagram-studio-h5j8fs.v2.appdeploy.ai/),
+a Portuguese web app with all 13 tools, server-side AI and text checks, voice
+profiles, a private cloud library, a planning calendar and carousel PNG exports.
+No terminal, Codex installation or provider API key is required to use the site.
+
+Start with **Minha voz**, then choose a tool in **Criar**. Save your recovery
+code in **Seu espaço** to open the same private workspace on another device.
+Content is prepared for your review and manual posting to Instagram.
+
+The web source and deployment contracts are in [web/](web/README.md). The site
+uses AppDeploy AI; the independent Codex skill installation remains available below.
+
+**Hosting status:** the initial AppDeploy backend is currently unavailable
+(HTTP 402); the source revision is complete and an alternative Lovable
+deployment is being prepared.
+
 ## Install in Codex
 
 Requires **Python 3.10+** and a Codex client that supports skills. Clone this
